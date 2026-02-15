@@ -1,16 +1,16 @@
-# This is a sample Python script.
+from src.data.loader import DataRequest, download_ohlc
+from src.data.cleaning import clean_ohlc
 
-# Press ⌃R to execute it or replace it with your code.
-# Press Double ⇧ to search everywhere for classes, files, tool windows, actions, and settings.
+req = DataRequest(
+    symbol="EURUSD=X",
+    start="2024-01-01",
+    end="2024-03-01",
+    interval="1d",
+)
 
+raw = download_ohlc(req)
+clean = clean_ohlc(raw)
 
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press ⌘F8 to toggle the breakpoint.
-
-
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
-
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+print("RAW:", raw.shape, raw.index.min(), raw.index.max())
+print("CLEAN:", clean.shape, clean.index.min(), clean.index.max())
+print(clean.head())
