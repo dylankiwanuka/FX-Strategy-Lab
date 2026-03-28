@@ -68,6 +68,7 @@ _SESSION_DEFAULTS = {
     "last_metrics": None,
     "last_overlay_cols": [],
     "last_chart_title": "",
+    "run_history": [],
 }
 for _k, _v in _SESSION_DEFAULTS.items():
     st.session_state.setdefault(_k, _v)
@@ -250,6 +251,27 @@ if run:
                 overlay_cols = []
                 chart_title = f"{symbol} ({interval})"
 
+            if strategy in ("MA crossover backtest", "RSI backtest") and metrics is not None:
+                summary_row = {
+                    "timestamp": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    "symbol": symbol,
+                    "interval": interval,
+                    "start": start,
+                    "end": end,
+                    "strategy": strategy,
+                    "fast_window": fast_window if strategy == "MA crossover backtest" else None,
+                    "slow_window": slow_window if strategy == "MA crossover backtest" else None,
+                    "ma_type": ma_type if strategy == "MA crossover backtest" else None,
+                    "period": period if strategy == "RSI backtest" else None,
+                    "oversold": oversold if strategy == "RSI backtest" else None,
+                    "overbought": overbought if strategy == "RSI backtest" else None,
+                    "total_return_pct": round(metrics["total_return_pct"], 2),
+                    "num_trades": metrics["num_trades"],
+                    "win_rate_pct": round(metrics["win_rate_pct"], 2),
+                    "max_drawdown_pct": round(metrics["max_drawdown_pct"], 2),
+                }
+                st.session_state.run_history.append(summary_row)
+
             st.session_state.last_ran = True
             st.session_state.last_strategy = strategy
             st.session_state.last_df = df
@@ -367,6 +389,19 @@ if (
             )
     else:
         st.info("Performance metrics are available when you run a backtest strategy (MA crossover or RSI).")
+    st.divider()
+    st.write("")
+
+    st.markdown("## Session Run Summary")
+    if st.button("Clear session history"):
+        st.session_state.run_history = []
+        st.rerun()
+
+    if st.session_state.run_history:
+        st.caption("Completed backtest runs in this session (latest at bottom).")
+        st.dataframe(pd.DataFrame(st.session_state.run_history), use_container_width=True)
+    else:
+        st.info("No backtest runs saved yet. Run MA crossover or RSI backtest to build session history.")
     st.divider()
     st.write("")
 
