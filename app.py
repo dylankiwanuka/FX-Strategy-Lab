@@ -16,6 +16,144 @@ from src.backtest.engine import run_backtest
 from src.backtest.metrics import compute_metrics
 
 
+def _format_calculation_preview(df: pd.DataFrame, cols: list[str], max_rows: int = 8) -> pd.DataFrame:
+    """Tail of selected columns with index shown as Date or Index for readability."""
+    existing = [c for c in cols if c in df.columns]
+    if not existing:
+        return pd.DataFrame()
+    preview = df[existing].tail(max_rows).copy()
+    out = preview.reset_index()
+    first = out.columns[0]
+    if pd.api.types.is_datetime64_any_dtype(out[first]):
+        out = out.rename(columns={first: "Date"})
+    else:
+        out = out.rename(columns={first: "Index"})
+    return out
+
+
+def _render_how_strategy_calculated() -> None:
+    """Educational detail for the last successful run only (session state). Uses last_strategy, last_chart_df, last_overlay_cols, last_params."""
+    last_strategy = st.session_state.get("last_strategy")
+    last_chart_df = st.session_state.get("last_chart_df")
+    if last_strategy is None or last_chart_df is None:
+        return
+    last_overlay_cols = st.session_state.get("last_overlay_cols") or []
+    last_params = st.session_state.get("last_params") or {}
+
+    st.markdown("## How This Strategy Is Calculated")
+
+    if last_strategy == "SMA overlay (no trades)":
+        n = last_params.get("sma_window", "?")
+        overlay = last_overlay_cols[0] if last_overlay_cols else None
+        with st.expander("Formula", expanded=False):
+            st.markdown(
+                f"- **Simple Moving Average (SMA)** smooths price by averaging the last **{n}** closing prices.\n"
+                "- **SMA** = average of closing prices over the selected window."
+            )
+        with st.expander("Step-by-step logic", expanded=False):
+            st.markdown(
+                "1. Take **Close** for each bar.\n"
+                f"2. Compute a **rolling average** over the last **{n}** closes.\n"
+                "3. Plot the SMA on the same chart as price (no trades)."
+            )
+        with st.expander("Why signals happen", expanded=False):
+            st.markdown(
+                "This mode **does not generate buy or sell signals**—it is for **visual learning** only. "
+                "You compare price to the SMA to see whether price is generally above or below its recent average."
+            )
+        with st.expander("Calculation preview", expanded=False):
+            cols = ["Close"]
+            if overlay and overlay in last_chart_df.columns:
+                cols.append(overlay)
+            prev = _format_calculation_preview(last_chart_df, cols)
+            if prev.empty:
+                st.caption("No preview columns available for this run.")
+            else:
+                st.dataframe(prev, use_container_width=True)
+
+    elif last_strategy == "MA crossover backtest":
+        fw = last_params.get("fast_window", "?")
+        sw = last_params.get("slow_window", "?")
+        mt = last_params.get("ma_type", "?")
+        with st.expander("Formula", expanded=False):
+            st.markdown(
+                "- **Fast MA** and **slow MA** use the window lengths from your last run (**fast** < **slow**).\n"
+            )
+            if mt == "SMA":
+                st.markdown(
+                    "- **SMA** = average of closing prices over the window.\n"
+                    f"- Fast SMA uses **{fw}** bars; slow SMA uses **{sw}** bars."
+                )
+            elif mt == "EMA":
+                st.markdown(
+                    "- **EMA** gives more weight to recent prices. One common recursive form:\n"
+                    "  - **EMA_t** = alpha × **Close_t** + (1 − alpha) × **EMA_(t−1)**\n"
+                    "  - **alpha** = 2 / (**n** + 1), where **n** is the window length.\n"
+                    f"- This app uses **pandas** `ewm(span=n, adjust=False)` for EMA (fast **n**={fw}, slow **n**={sw})."
+                )
+            else:
+                st.markdown("- MA type comes from your last run parameters.")
+            st.markdown(
+                "- The strategy **compares** fast vs slow MAs and looks for a **cross** from one side to the other."
+            )
+        with st.expander("Step-by-step logic", expanded=False):
+            st.markdown(
+                "1. Calculate the **fast MA** on **Close**.\n"
+                "2. Calculate the **slow MA** on **Close**.\n"
+                "3. Compare **current** and **previous** bars for both MAs.\n"
+                "4. **Buy** when the fast MA **crosses above** the slow MA.\n"
+                "5. **Sell** when the fast MA **crosses below** the slow MA."
+            )
+        with st.expander("Why signals happen", expanded=False):
+            st.markdown(
+                "- A **buy** tries to catch **upward momentum** when the faster average moves above the slower one.\n"
+                "- A **sell** tries to exit when **momentum weakens** and the fast average drops back below the slow one.\n"
+                "- Crossovers often appear when a **trend** may be starting or ending; they can **whipsaw** in sideways markets."
+            )
+        with st.expander("Calculation preview", expanded=False):
+            prev = _format_calculation_preview(last_chart_df, ["Close", "fast_ma", "slow_ma", "signal"])
+            if prev.empty:
+                st.caption("No preview columns available for this run.")
+            else:
+                st.dataframe(prev, use_container_width=True)
+
+    elif last_strategy == "RSI backtest":
+        p = last_params.get("period", "?")
+        ob = last_params.get("oversold", "?")
+        oa = last_params.get("overbought", "?")
+        with st.expander("Formula", expanded=False):
+            st.markdown(
+                "- Price **change** each bar: previous close to current close.\n"
+                "- **Gains** and **losses** are separated from those changes.\n"
+                "- **RS** = (average gain) / (average loss) over the lookback.\n"
+                "- **RSI** = 100 − (100 / (1 + **RS**)).\n"
+                f"- This implementation uses **rolling averages** of gains and losses over **{p}** bars "
+                "(not Wilder smoothing). When both averages are zero, RSI is set to **50**."
+            )
+        with st.expander("Step-by-step logic", expanded=False):
+            st.markdown(
+                "1. Calculate **price changes** from **Close**.\n"
+                "2. Split changes into **gains** (up moves) and **losses** (down moves).\n"
+                "3. Compute **rolling average** gains and **rolling average** losses over the RSI period.\n"
+                "4. Compute **RS** = average gain / average loss.\n"
+                "5. Compute **RSI** from **RS**.\n"
+                f"6. **Buy** when RSI is **below** the oversold level (**{ob}**).\n"
+                f"7. **Sell** when RSI is **above** the overbought level (**{oa}**)."
+            )
+        with st.expander("Why signals happen", expanded=False):
+            st.markdown(
+                f"- A **buy** when RSI is **below {ob}** assumes the market may have **sold off** and could bounce (mean-reversion idea).\n"
+                f"- A **sell** when RSI is **above {oa}** assumes the rally may be **stretched**.\n"
+                "- RSI is a **momentum oscillator**: in a **strong trend**, RSI can **stay extreme** for a long time, so signals are not guaranteed wins or losses."
+            )
+        with st.expander("Calculation preview", expanded=False):
+            prev = _format_calculation_preview(last_chart_df, ["Close", "rsi", "signal"])
+            if prev.empty:
+                st.caption("No preview columns available for this run.")
+            else:
+                st.dataframe(prev, use_container_width=True)
+
+
 def enforce_intraday_limits(start_str: str, end_str: str, interval: str) -> tuple[str, str, str | None]:
     """
     Intraday intervals (like 1h) can fail if the date range is too old.
@@ -272,6 +410,21 @@ if run:
                 }
                 st.session_state.run_history.append(summary_row)
 
+            if strategy == "SMA overlay (no trades)":
+                st.session_state.last_params = {"sma_window": sma_window}
+            elif strategy == "MA crossover backtest":
+                st.session_state.last_params = {
+                    "fast_window": fast_window,
+                    "slow_window": slow_window,
+                    "ma_type": ma_type,
+                }
+            elif strategy == "RSI backtest":
+                st.session_state.last_params = {
+                    "period": period,
+                    "oversold": oversold,
+                    "overbought": overbought,
+                }
+
             st.session_state.last_ran = True
             st.session_state.last_strategy = strategy
             st.session_state.last_df = df
@@ -307,6 +460,10 @@ if (
         c1.metric("Rows", f"{len(last_df):,}")
         c2.metric("From", str(last_df.index.min())[:10])
         c3.metric("To", str(last_df.index.max())[:10])
+    st.write("")
+
+    _render_how_strategy_calculated()
+    st.divider()
     st.write("")
 
     st.markdown("## 1) Market Movement")
