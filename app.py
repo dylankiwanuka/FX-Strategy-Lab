@@ -71,6 +71,88 @@ def _render_how_strategy_calculated() -> None:
             else:
                 st.dataframe(prev, use_container_width=True)
 
+    elif last_strategy == "MA crossover backtest":
+        fw = last_params.get("fast_window", "?")
+        sw = last_params.get("slow_window", "?")
+        mt = last_params.get("ma_type", "?")
+        with st.expander("Formula", expanded=False):
+            st.markdown(
+                "- **Fast MA** and **slow MA** use the window lengths from your last run (**fast** < **slow**).\n"
+            )
+            if mt == "SMA":
+                st.markdown(
+                    "- **SMA** = average of closing prices over the window.\n"
+                    f"- Fast SMA uses **{fw}** bars; slow SMA uses **{sw}** bars."
+                )
+            elif mt == "EMA":
+                st.markdown(
+                    "- **EMA** gives more weight to recent prices. One common recursive form:\n"
+                    "  - **EMA_t** = alpha × **Close_t** + (1 − alpha) × **EMA_(t−1)**\n"
+                    "  - **alpha** = 2 / (**n** + 1), where **n** is the window length.\n"
+                    f"- This app uses **pandas** `ewm(span=n, adjust=False)` for EMA (fast **n**={fw}, slow **n**={sw})."
+                )
+            else:
+                st.markdown("- MA type comes from your last run parameters.")
+            st.markdown(
+                "- The strategy **compares** fast vs slow MAs and looks for a **cross** from one side to the other."
+            )
+        with st.expander("Step-by-step logic", expanded=False):
+            st.markdown(
+                "1. Calculate the **fast MA** on **Close**.\n"
+                "2. Calculate the **slow MA** on **Close**.\n"
+                "3. Compare **current** and **previous** bars for both MAs.\n"
+                "4. **Buy** when the fast MA **crosses above** the slow MA.\n"
+                "5. **Sell** when the fast MA **crosses below** the slow MA."
+            )
+        with st.expander("Why signals happen", expanded=False):
+            st.markdown(
+                "- A **buy** tries to catch **upward momentum** when the faster average moves above the slower one.\n"
+                "- A **sell** tries to exit when **momentum weakens** and the fast average drops back below the slow one.\n"
+                "- Crossovers often appear when a **trend** may be starting or ending; they can **whipsaw** in sideways markets."
+            )
+        with st.expander("Calculation preview", expanded=False):
+            prev = _format_calculation_preview(last_chart_df, ["Close", "fast_ma", "slow_ma", "signal"])
+            if prev.empty:
+                st.caption("No preview columns available for this run.")
+            else:
+                st.dataframe(prev, use_container_width=True)
+
+    elif last_strategy == "RSI backtest":
+        p = last_params.get("period", "?")
+        ob = last_params.get("oversold", "?")
+        oa = last_params.get("overbought", "?")
+        with st.expander("Formula", expanded=False):
+            st.markdown(
+                "- Price **change** each bar: previous close to current close.\n"
+                "- **Gains** and **losses** are separated from those changes.\n"
+                "- **RS** = (average gain) / (average loss) over the lookback.\n"
+                "- **RSI** = 100 − (100 / (1 + **RS**)).\n"
+                f"- This implementation uses **rolling averages** of gains and losses over **{p}** bars "
+                "(not Wilder smoothing). When both averages are zero, RSI is set to **50**."
+            )
+        with st.expander("Step-by-step logic", expanded=False):
+            st.markdown(
+                "1. Calculate **price changes** from **Close**.\n"
+                "2. Split changes into **gains** (up moves) and **losses** (down moves).\n"
+                "3. Compute **rolling average** gains and **rolling average** losses over the RSI period.\n"
+                "4. Compute **RS** = average gain / average loss.\n"
+                "5. Compute **RSI** from **RS**.\n"
+                f"6. **Buy** when RSI is **below** the oversold level (**{ob}**).\n"
+                f"7. **Sell** when RSI is **above** the overbought level (**{oa}**)."
+            )
+        with st.expander("Why signals happen", expanded=False):
+            st.markdown(
+                f"- A **buy** when RSI is **below {ob}** assumes the market may have **sold off** and could bounce (mean-reversion idea).\n"
+                f"- A **sell** when RSI is **above {oa}** assumes the rally may be **stretched**.\n"
+                "- RSI is a **momentum oscillator**: in a **strong trend**, RSI can **stay extreme** for a long time, so signals are not guaranteed wins or losses."
+            )
+        with st.expander("Calculation preview", expanded=False):
+            prev = _format_calculation_preview(last_chart_df, ["Close", "rsi", "signal"])
+            if prev.empty:
+                st.caption("No preview columns available for this run.")
+            else:
+                st.dataframe(prev, use_container_width=True)
+
 
 def enforce_intraday_limits(start_str: str, end_str: str, interval: str) -> tuple[str, str, str | None]:
     """
@@ -502,4 +584,3 @@ else:
         - SMA: `20`
         """
     )
-    
