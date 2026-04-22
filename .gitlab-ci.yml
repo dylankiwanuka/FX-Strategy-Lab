@@ -1,3 +1,13 @@
-workflow:
+stages:
+  - test
+
+run-tests:
+  stage: test
+  image: python:3.11-slim
+  before_script:
+    - pip install -r requirements.txt
+  script:
+    - pytest -q --tb=short
   rules:
-    - when: never
+    - if: '$CI_COMMIT_BRANCH == "main"'
+    - if: '$CI_PIPELINE_SOURCE == "merge_request_event"'

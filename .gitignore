@@ -1,5 +1,7 @@
-.cursor/
-.git/cursor/
+.idea/
+.venv/
+.git/idea/
+.streamlit/
 .DS_Store
 **/.DS_Store
 __pycache__/
