@@ -11,9 +11,7 @@ def rsi_signals(
     oversold: float = 30,
     overbought: float = 70,
 ) -> pd.DataFrame:
-    """
-    RSI overbought/oversold signal generator. Adds rsi and signal (1=oversold buy, -1=overbought sell, 0=none).
-    """
+    """Adds RSI plus discrete signals when RSI is oversold (buy) or overbought (sell)."""
     if "Close" not in df.columns or df["Close"] is None or df["Close"].empty:
         raise ValueError("DataFrame must contain a non-empty Close column")
     if period <= 0:
@@ -24,6 +22,7 @@ def rsi_signals(
     rsi_series = rsi(df["Close"], period)
 
     signal = pd.Series(0, index=df.index, dtype=int)
+    # Oversold = sharp selloff that may bounce (buy); overbought = stretched rally that may fade (sell).
     signal = signal.mask(rsi_series < oversold, 1).mask(rsi_series > overbought, -1).astype(int)
 
     out = df.copy()

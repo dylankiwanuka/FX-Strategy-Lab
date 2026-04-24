@@ -5,13 +5,10 @@ import pandas as pd
 
 def clean_ohlc(df: pd.DataFrame) -> pd.DataFrame:
     """
-    Cleans and validates OHLC data:
-    - ensures datetime index
-    - sorts by time
-    - removes duplicate timestamps
-    - converts values to numeric
-    - forward-fills missing values
-    - drops remaining NaNs
+    Normalise OHLC data for backtesting:
+    - sort by time
+    - remove duplicates
+    - forward-fill missing values
     """
     if df is None or df.empty:
         raise ValueError("Input OHLC DataFrame is empty.")
@@ -33,6 +30,7 @@ def clean_ohlc(df: pd.DataFrame) -> pd.DataFrame:
     for c in required:
         out[c] = pd.to_numeric(out[c], errors="coerce")
 
+    # FX trades almost continuously — a missing bar usually means no print, not an unknown price.
     out = out.ffill()
     out = out.dropna(subset=required)
 

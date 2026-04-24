@@ -7,13 +7,11 @@ def run_backtest(
     df: pd.DataFrame,
     initial_capital: float = 10000.0,
 ) -> tuple[list[dict], pd.Series]:
-    """
-    Minimal sequential backtester: long-only, one position at a time.
-    Entry at signal==1, exit at signal==-1, at Close. Returns trades and index-aligned equity curve.
-    """
+    """Long-only sequential backtest at each Close; returns round-trip trades and an equity series."""
     if "Close" not in df.columns or "signal" not in df.columns or df.empty:
         raise ValueError("DataFrame must contain non-empty Close and signal columns")
 
+    # Long-only book: either flat cash or fully invested — deploy the whole balance on each entry.
     cash = initial_capital
     in_position = False
     entry_time = None
@@ -28,7 +26,7 @@ def run_backtest(
         signal = df["signal"].iloc[i]
 
         if signal == 1 and not in_position:
-            units = cash / close
+            units = cash / close  # size the position from available cash at this bar's close
             cash = 0.0
             entry_time = idx
             entry_price = close
@@ -50,11 +48,12 @@ def run_backtest(
             in_position = False
 
         if in_position:
-            equity = cash + units * close
+            equity = cash + units * close  # mark-to-market each bar for a continuous equity curve
         else:
             equity = cash
         equity_list.append(equity)
 
+    # If still long at the end, flatten on the last close so open risk is not omitted from metrics.
     if in_position:
         last_idx = df.index[-1]
         last_close = df["Close"].iloc[-1]

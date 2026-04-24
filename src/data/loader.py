@@ -8,6 +8,8 @@ import yfinance as yf
 
 @dataclass(frozen=True)
 class DataRequest:
+    """Parameters for a single Yahoo Finance OHLC download request."""
+
     symbol: str          # e.g. "EURUSD=X"
     start: str           # "YYYY-MM-DD"
     end: str             # "YYYY-MM-DD"
@@ -24,7 +26,7 @@ def download_ohlc(request: DataRequest) -> pd.DataFrame:
         start=request.start,
         end=request.end,
         interval=request.interval,
-        auto_adjust=False,
+        auto_adjust=False,  # keep raw OHLC so the backtest uses prices traders would have seen
         progress=False,
         threads=True,
     )
@@ -35,7 +37,7 @@ def download_ohlc(request: DataRequest) -> pd.DataFrame:
             f"({request.start} to {request.end}, interval={request.interval})."
         )
 
-    # Sometimes yfinance returns a MultiIndex for columns
+    # yfinance column layout changed across versions — flatten whether it is flat or MultiIndex.
     if isinstance(df.columns, pd.MultiIndex):
         df.columns = df.columns.get_level_values(0)
 

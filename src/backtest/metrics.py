@@ -7,17 +7,7 @@ def compute_metrics(
     trades: list[dict],
     equity_curve: pd.Series,
 ) -> dict:
-    """
-    Compute performance metrics from backtest outputs.
-
-    Metrics:
-    - total_return_pct: Period return (first to last equity) in percent.
-    - num_trades: Number of round-trip trades.
-    - win_rate_pct: Percent of trades with positive pnl (0 if no trades).
-    - avg_trade_return_pct: Average return_pct across trades (0 if no trades).
-    - max_drawdown_pct: Worst drawdown as a positive percentage (e.g. 5.0 = 5% drawdown).
-    - max_drawdown_value: Worst peak-to-trough drop in equity units, signed negative (e.g. -500.0).
-    """
+    """Summarise total return, trade stats, and drawdown from trades plus an equity curve."""
     if equity_curve is None or len(equity_curve) == 0:
         raise ValueError("equity_curve must be non-empty")
 
@@ -36,11 +26,12 @@ def compute_metrics(
             sum(t["return_pct"] for t in trades) / num_trades
         )
 
-    peak = equity_curve.cummax()
+    peak = equity_curve.cummax()  # drawdown is from the running peak — worst loss while holding the run
     drawdown_value = equity_curve - peak
     max_drawdown_value = float(drawdown_value.min())
 
     drawdown_pct = (equity_curve - peak) / peak
+    # A zero peak would divide by zero; replace infinities without masking genuine underwater periods.
     drawdown_pct = drawdown_pct.replace([float("inf"), float("-inf")], 0.0).fillna(0.0)
     drawdown_pct = drawdown_pct * 100
     max_drawdown_pct = float(abs(drawdown_pct.min()))
