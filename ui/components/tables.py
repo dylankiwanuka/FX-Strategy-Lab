@@ -82,7 +82,7 @@ def render_strategy_decisions(
     else:
         cap = "Each row is one completed trade (buy then sell)."
         if any_forced_exit(last_trades):
-            cap += " Final trade may be closed at last available price."
+            cap += " Forced exit: the backtest ended while this trade was still open. It was automatically closed at the final bar's price."
         st.caption(cap)
         trades_df = pd.DataFrame(last_trades)
         render_centered_table(trades_df, height=300)

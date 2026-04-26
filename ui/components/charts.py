@@ -110,7 +110,7 @@ def render_equity_section(
         render_section_heading("3) Account Value Over Time", "equity")
     if last_equity_curve is not None:
         st.caption(
-            "This shows simulated account value over time; dips are drawdowns when the strategy was losing."
+            "This chart shows your account value over time — not the asset price. A rising line means your portfolio is growing."
         )
 
         def _line() -> None:
@@ -131,4 +131,4 @@ def render_equity_section(
 
         render_wide_button_row(_download)
     else:
-        st.info("Run a backtest strategy (MA crossover or RSI) to see account value over time.")
+        st.info("Run a backtest strategy (MA crossover, RSI, or SMA price cross) to see account value over time.")
