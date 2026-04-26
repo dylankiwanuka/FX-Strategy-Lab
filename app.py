@@ -113,6 +113,14 @@ start, end, warning = enforce_intraday_limits(start, end, interval)
 if warning:
     st.sidebar.warning(warning)
 
+if end <= start:
+    st.error(
+        "The selected date range is too narrow or invalid after adjusting "
+        "for intraday interval limits. Please choose a more recent or "
+        "wider date range."
+    )
+    st.stop()
+
 st.sidebar.header("Indicator Settings")
 sma_window = st.sidebar.slider(
     "SMA window",
@@ -127,7 +135,7 @@ strategy = st.sidebar.selectbox(
     "Strategy",
     ["SMA overlay (no trades)", "MA crossover backtest", "RSI backtest", "SMA price cross backtest"],
     index=0,
-    help="SMA overlay only plots price and MA. MA crossover and RSI run a full backtest with trades.",
+    help="SMA overlay only plots price and MA. MA crossover, RSI, and SMA price cross run a full backtest with trades.",
 )
 
 sma_cross_window = 20
@@ -172,6 +180,7 @@ elif strategy == "RSI backtest":
         step=1.0,
         help="RSI level below which the strategy buys (oversold).",
     )
+    st.sidebar.caption("Lower values = fewer buy signals. Default: 30.")
     overbought = st.sidebar.number_input(
         "Overbought",
         min_value=50.0,
@@ -180,6 +189,7 @@ elif strategy == "RSI backtest":
         step=1.0,
         help="RSI level above which the strategy sells (overbought).",
     )
+    st.sidebar.caption("Higher values = fewer sell signals. Default: 70.")
 elif strategy == "SMA price cross backtest":
     sma_cross_window = st.sidebar.slider(
         "SMA window",
@@ -208,7 +218,7 @@ if run:
 
         if df is None or len(df) == 0:
             _clear_results_state()
-            st.error("No data returned for the selected settings.")
+            st.error("No data was returned for this combination of currency pair, date range, and interval. If you selected an hourly interval, try a more recent date range (yfinance limits intraday data to the last 730 days).")
         else:
             trades: list = []
             equity_curve = None
