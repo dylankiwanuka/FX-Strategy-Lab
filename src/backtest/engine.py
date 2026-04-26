@@ -26,6 +26,9 @@ def run_backtest(
         signal = df["signal"].iloc[i]
 
         if signal == 1 and not in_position:
+            if pd.isna(close) or close <= 0:
+                equity_list.append(cash)
+                continue
             units = cash / close  # size the position from available cash at this bar's close
             cash = 0.0
             entry_time = idx

@@ -26,25 +26,44 @@ def execute_backtest_pipeline(
     df = clean_ohlc(raw)
 
     if strategy == "MA crossover backtest":
+        fast_window = params.get("fast_window")
+        slow_window = params.get("slow_window")
+        if fast_window is None or slow_window is None:
+            raise ValueError(
+                "MA crossover requires 'fast_window' and 'slow_window' in params"
+            )
+        ma_type = params.get("ma_type", "SMA")
         chart_df = ma_crossover_signals(
             df,
-            fast_window=params["fast_window"],
-            slow_window=params["slow_window"],
-            ma_type=params.get("ma_type", "SMA"),
+            fast_window=fast_window,
+            slow_window=slow_window,
+            ma_type=ma_type,
         )
         overlay_cols = ["fast_ma", "slow_ma"]
         chart_title = f"{symbol} ({interval}) MA crossover"
     elif strategy == "RSI backtest":
+        period = params.get("period")
+        oversold = params.get("oversold")
+        overbought = params.get("overbought")
+        if any(v is None for v in [period, oversold, overbought]):
+            raise ValueError(
+                "RSI strategy requires 'period', 'oversold', and 'overbought' in params"
+            )
         chart_df = rsi_signals(
             df,
-            period=params["period"],
-            oversold=params["oversold"],
-            overbought=params["overbought"],
+            period=period,
+            oversold=oversold,
+            overbought=overbought,
         )
         overlay_cols = []
         chart_title = f"{symbol} ({interval}) RSI"
     elif strategy == "SMA price cross backtest":
-        chart_df = sma_price_cross_signals(df, window=params["window"])
+        window = params.get("window")
+        if window is None:
+            raise ValueError(
+                "SMA price cross requires 'window' in params"
+            )
+        chart_df = sma_price_cross_signals(df, window=window)
         overlay_cols = ["sma"]
         chart_title = f"{symbol} ({interval}) SMA price cross"
     else:
