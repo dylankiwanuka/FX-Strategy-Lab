@@ -1,6 +1,6 @@
 # Evaluation
 
-This document summarises how the FX Strategy Lab was evaluated for an interim report: **correctness**, **robustness**, **performance**, and **usability**. Claims are kept modest and aligned with what was actually built and tested.
+FX Strategy Lab was evaluated for an interim report across **correctness**, **robustness**, **performance**, and **usability**. Claims are kept modest and aligned with what was actually built and tested.
 
 ## 1. Evaluation overview
 
@@ -9,9 +9,7 @@ The tool was assessed in four areas:
 - **Correctness** — Do indicators, signals, backtesting, and metrics behave as intended on controlled inputs?
 - **Robustness** — Does the app handle normal use (data load, strategy run, empty edge cases in tests) without breaking core assumptions?
 - **Performance** — Is the project responsive enough for interactive, educational exploration (not a formal production benchmark)?
-- **Usability** — Does the Streamlit interface support learning: controls, charts, metrics, session comparison, and explainability?
-
-Formal **user studies or moderated usability tests have not been completed**; usability is described from design intent and informal use, not from survey or lab results.
+- **Usability** focuses on whether the Streamlit interface supports learning: controls, charts, metrics, session comparison, and explainability.
 
 ## 2. Correctness validation
 
@@ -65,7 +63,7 @@ The Streamlit app is designed to support **educational exploration**:
 - **Session run summary** — compares multiple backtest runs within one session.
 - **How This Strategy Is Calculated** — `app.py` includes this block: formulas, step-by-step logic, why signals occur, and a short preview table driven only by **last-run** session state (`last_strategy`, `last_chart_df`, `last_params`, `last_overlay_cols`), so the text always matches the chart you are viewing.
 
-**Formal usability evaluation** (e.g. structured tasks, timing, error rates, questionnaires) is **out of scope for the current submission** and is listed as a possible **next step** rather than a completed study.
+A think-aloud usability study was conducted with four participants following completion of the core implementation. Full results, task completion rates, participant quotes, and a breakdown of issues found are documented in docs/user_study.md. Four usability issues were identified during the study and addressed directly in the codebase: an equity curve caption was added, forced exit terminology was clarified, RSI slider guidance was introduced, and the intraday error message was made actionable.
 
 ## 6. Limitations
 

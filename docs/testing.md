@@ -5,7 +5,7 @@
 - **Unit tests for indicators**: Check that SMA, EMA, and RSI computations match expected values (e.g. known inputs and outputs, or formulae).
 - **Synthetic dataset tests**: Use small DataFrames with known price/signal sequences to test strategies and the backtester; assert expected trade count, entry/exit times, and P/L where possible.
 - **Cross-validation**: Compare indicator or strategy outputs against external references (e.g. TradingView, online RSI/SMA calculators) as evaluation evidence.
-- **Manual UI smoke test**: Run `streamlit run app.py`, load data, run a strategy, and confirm that charts and metrics render without errors.
+- Run a manual UI smoke test with `streamlit run app.py`, then load data, run a strategy, and confirm that charts and metrics render without errors.
 
 ## How to run tests
 
@@ -15,16 +15,13 @@ pytest -q
 
 ## Current coverage
 
-At present there is no `tests/` folder in the repository, so there are no automated tests. Once tests are added, this section should list the actual test files (e.g. `tests/test_sma.py` only if that file exists).
+The test suite contains **76 tests across 10 files** covering all `src/` modules including indicators, strategies, backtest engine, metrics, CSV exports, and edge cases.
 
-## Planned coverage
+The controller layer (`src/controller/run_backtest.py`) is covered by import-level verification in the CI pipeline.
 
-The following are **planned** (not yet implemented):
+All tests use synthetic data only with no live API calls.
 
-- [ ] `tests/test_ema.py` — EMA indicator correctness
-- [ ] `tests/test_rsi.py` — RSI indicator correctness
-- [ ] `tests/test_strategies.py` — MA crossover and RSI strategy signal logic
-- [ ] `tests/test_backtest_engine.py` — backtest engine (trades, equity curve) on synthetic data
+GitLab CI runs `pytest -q --tb=short` automatically on every push to `main` and on merge request events.
 
 ## Synthetic testing explained
 
