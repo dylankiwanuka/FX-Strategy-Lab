@@ -1,43 +1,73 @@
-# Forex Trading Strategy Backtesting & Visualisation Tool
+# Forex Trading Strategy Backtesting and Visualisation Tool
 
-An educational tool for backtesting and visualising technical trading strategies on Forex data. It is intended for learning and analysis only—not for live trading.
+An educational Streamlit application for loading historical FX OHLC data, applying simple technical strategies, running a long-only backtest, and visualising results with Plotly.
 
-## Implemented Features
+## Features
 
-- **Yahoo Finance OHLC retrieval** via yfinance (`src/data/loader.py`)
-- **Data cleaning and validation** (`src/data/cleaning.py`)
-- **Indicators**: SMA, EMA, RSI (`src/indicators/sma.py`, `ema.py`, `rsi.py`)
-- **Strategies**: MA crossover, RSI strategy (`src/strategies/ma_crossover.py`, `rsi_strategy.py`). The UI also offers an SMA overlay (chart only, no trades), implemented in the app.
-- **Sequential backtesting engine** (`src/backtest/engine.py`)
-- **Performance metrics** (`src/backtest/metrics.py`)
-- **Streamlit dashboard** (`app.py`) with **Plotly visualisations** (`src/viz/charts.py`)
+- **Data**: Yahoo Finance downloads via `yfinance` (`src/data/loader.py`) and cleaning helpers (`src/data/cleaning.py`).
+- **Indicators**: SMA, EMA, and RSI (`src/indicators/`).
+- **Strategies**:
+  - **SMA overlay (chart only)**: plots price with a configurable SMA; no simulated trades in `app.py`.
+  - **MA crossover backtest**: fast/slow MA cross signals (`src/strategies/ma_crossover.py`).
+  - **RSI backtest**: discrete buys/sells from RSI thresholds (`src/strategies/rsi_strategy.py`). RSI averages gains and losses with a simple rolling mean (not Wilder smoothing) for educational readability.
+  - **SMA price cross backtest**: buy/sell when price crosses its own SMA (`src/strategies/sma_price_cross.py`).
+- **Backtesting and metrics**: sequential engine (`src/backtest/engine.py`) and summary metrics (`src/backtest/metrics.py`).
+- Charts: candlesticks with overlays (`src/viz/charts.py`).
+- **Controller layer**: reusable download → clean → strategy → backtest → metrics pipeline without Streamlit (`src/controller/run_backtest.py`).
+- **UI package**: Streamlit layout and tutor/explore rendering under `ui/`.
 
-Orchestration (data → clean → strategy → backtest → metrics → viz) currently lives in `app.py`; there is no separate controller package.
-
-## Planned / In Progress
-
-- Session-based trade summary (run history in `st.session_state`)
-- Expanded test suite (EMA, RSI, strategies, backtest)
-- Evaluation evidence pack (cross-checks, runtime benchmarks, usability feedback)
-
-## Architecture
-
-The project uses a **layered (n-tier) architecture**: separation of concerns, testability, and extensibility. See `docs/architecture.md` for details.
-
-## Repository Structure
+## Repository layout
 
 ```
 app.py
-src/
-  data/       loader.py, cleaning.py
-  indicators/ sma.py, ema.py, rsi.py
-  strategies/ ma_crossover.py, rsi_strategy.py
-  backtest/   engine.py, metrics.py
-  viz/        charts.py
+main.py
 requirements.txt
+README.md
+.gitlab-ci.yml
+docs/
+  architecture.md
+tests/
+  conftest.py
+  test_backtest_edge_cases.py
+  test_backtest_engine.py
+  test_csv_exports.py
+  test_ema.py
+  test_metrics.py
+  test_rsi.py
+  test_sma.py
+  test_strategies.py
+  test_strategy_behaviour.py
+src/
+  __init__.py
+  controller/
+    __init__.py
+    run_backtest.py
+  data/
+    __init__.py
+    loader.py
+    cleaning.py
+  indicators/
+    __init__.py
+    sma.py
+    ema.py
+    rsi.py
+  strategies/
+    __init__.py
+    ma_crossover.py
+    rsi_strategy.py
+    sma_price_cross.py
+  backtest/
+    __init__.py
+    engine.py
+    metrics.py
+  viz/
+    __init__.py
+    charts.py
+ui/
+  app_logic/
+  components/
+  helpers/
 ```
-
-There is no `src/controller/` or `tests/` folder at present; tests are planned.
 
 ## Setup
 
@@ -45,22 +75,37 @@ There is no `src/controller/` or `tests/` folder at present; tests are planned.
 pip install -r requirements.txt
 ```
 
-## Run
+Alternatively, run the one-command setup script which creates a
+virtual environment and installs all dependencies automatically:
+
+```bash
+./setup.sh
+```
+
+Then activate the environment with:
+
+```bash
+source venv/bin/activate
+```
+
+## Run the app
 
 ```bash
 streamlit run app.py
 ```
 
-## Test
+## Tests
 
 ```bash
 pytest -q
 ```
 
-(Add tests under `tests/` when the suite is created.)
+Test modules live under `tests/` and cover indicators, strategies, the backtest engine, metrics, CSV helpers, and edge cases.
 
-## Assumptions and Limitations
+## Assumptions and limitations
 
-- **Educational use only**—not suitable for live trading.
-- **Simplified execution model**: long-only, one position at a time, execution at close; see `src/backtest/engine.py` for documented assumptions.
-- Results are sensitive to parameters and market regime; past performance does not guarantee future results.
+- **Educational use only** — not a substitute for professional trading or risk controls.
+- **Long-only execution model** — one position at a time, entries and exits on bar close; see `src/backtest/engine.py`.
+- **No market frictions** — no slippage, spreads, financing, or transaction costs.
+- **RSI simplification** — rolling mean of gains/losses instead of Wilder smoothing; chosen for clarity, not as a production default.
+- Prices come from Yahoo Finance/yfinance. Availability and quality depend on that service and the chosen symbol or interval.
