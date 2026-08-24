@@ -1,6 +1,8 @@
-# Forex Trading Strategy Backtesting and Visualisation Tool
+# FX Strategy Lab: A Transparent Educational Tool for Forex Strategy Backtesting and Visualisation
 
-An educational Streamlit application for loading historical FX OHLC data, applying simple technical strategies, running a long-only backtest, and visualising results with Plotly.
+An educational Streamlit application that translates technical forex indicators and backtesting mechanics into plain-English explanations for non-technical users, while still giving experienced users full analytical depth.
+
+Built end-to-end from requirements gathering through to delivery: user needs were mapped across three distinct personas, prioritised using MoSCoW, and validated through a structured think-aloud usability study whose findings were translated directly into shipped product improvements. Along the way it involved working with real market data, applying core technical analysis concepts (moving averages, RSI, trend and momentum signals), and reasoning about the practical limitations of backtesting — spread, slippage, and overfitting — that separate simulated performance from real trading outcomes.
 
 ## Features
 
@@ -109,17 +111,3 @@ Test modules live under `tests/` and cover indicators, strategies, the backtest 
 - **No market frictions** — no slippage, spreads, financing, or transaction costs.
 - **RSI simplification** — rolling mean of gains/losses instead of Wilder smoothing; chosen for clarity, not as a production default.
 - Prices come from Yahoo Finance/yfinance. Availability and quality depend on that service and the chosen symbol or interval.
-
-Project Log Details:
-
-Throughout the project, I maintained version control using a GitLab repository, committing frequently and incrementally as features were completed and tested. During the more active development phases, this was close to daily, with natural gaps between larger milestones. Rather than making large batch commits, I aimed to keep each commit focused on a single change.
-
-I had three meetings with my supervisor throughout the project, which mainly acted as progress check-ins to review completed work and discuss the next steps.
-
-The first meeting took place in the early stages of the project, where I presented the progress made on the data pipeline and indicator modules, and explained the planned system architecture and how I intended to approach the strategy and backtesting components.
-
-By the second meeting, the MA Crossover and RSI strategies were working end-to-end in the Streamlit dashboard. I demonstrated the progress made so far and reviewed how the project was developing against the objectives set out in the interim report.
-
-The third meeting took place in the later stages of development, where I demonstrated the more complete system, including the three implemented strategies and session history functionality. We also discussed the dissertation write-up and the upcoming viva.
-
-Overall, the meetings were useful for tracking progress, discussing the project’s direction, and making sure development stayed on course.
