@@ -4,6 +4,7 @@
   <img width="800" alt="FX Strategy Lab dashboard" src="https://github.com/user-attachments/assets/a0c7ab40-9282-442b-aa53-4d83e150a7a6" />
 </div>
 
+
 An educational Streamlit application that translates technical forex indicators and backtesting mechanics into plain-English explanations for non-technical users, while still giving experienced users full analytical depth.
 
 Built end-to-end from requirements gathering through to delivery: user needs were mapped across three distinct personas, prioritised using MoSCoW, and validated through a structured think-aloud usability study whose findings were translated directly into shipped product improvements. Along the way it involved working with real market data, applying core technical analysis concepts (moving averages, RSI, trend and momentum signals), and reasoning about the practical limitations of backtesting — spread, slippage, and overfitting — that separate simulated performance from real trading outcomes.
