@@ -1,6 +1,8 @@
 # FX Strategy Lab: A Transparent Educational Tool for Forex Strategy Backtesting and Visualisation
 
-<img width="452" height="243" alt="image" src="https://github.com/user-attachments/assets/a0c7ab40-9282-442b-aa53-4d83e150a7a6" />
+<div align="center">
+  <img width="800" alt="FX Strategy Lab dashboard" src="https://github.com/user-attachments/assets/a0c7ab40-9282-442b-aa53-4d83e150a7a6" />
+</div>
 
 An educational Streamlit application that translates technical forex indicators and backtesting mechanics into plain-English explanations for non-technical users, while still giving experienced users full analytical depth.
 
